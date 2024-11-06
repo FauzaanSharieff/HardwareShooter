@@ -1,0 +1,164 @@
+#include<Arduino.h>
+#include<stdlib.h>
+#include<Servo.h>
+
+int i, j; //loop variables
+int led; //LED which switches on
+int prevLed; //Random LED control
+int motor; //Pin for motor
+int array[180]; //angle array
+int potpin = 0; //Analog input pin for potentiometer
+int val; //Stores analog value
+int ser; //Servo angle
+int up1, low1, up2, low2, up3, low3, up4, low4, up5, low5; //Upper and Lower LED angles
+int buzzer; //Buzzer Pin
+int score;  //score
+int s1; //Switch
+unsigned long startTime = millis(); //Time 
+unsigned long duration = 40000;
+int oldSwitchValue;
+bool isShootable;
+Servo serv; //Servo object
+void setup()
+{ 
+  low1 = 38;                        //Initialising LED Angles
+  up1 = 50;
+  low2 = 60;
+  up2 = 72;
+  low3 = 88;
+  up3 = 100;
+  low4 = 117;
+  up4 = 129;
+  low5 = 132;
+  up5 = 150;
+  buzzer = 9;                              //Buzzer is pin 9
+  s1 = 8;    
+  pinMode(s1, INPUT_PULLUP);               //Switch is pin 8
+  pinMode(3, OUTPUT); 
+  pinMode(buzzer, OUTPUT);
+  for(i=3; i<8; i++)
+    {
+      pinMode(i, OUTPUT);
+    }
+  serv.attach(2); 
+  Serial.begin(9600);
+  Serial.println("Welcome to Hardware Shooter!");
+}
+
+void loop() 
+{ 
+  unsigned long currentTime = millis();
+  while(true)
+  {
+  currentTime = millis();
+  for(i=3; i<8; i++)         //Resets all LEDs to 0
+    digitalWrite(i, 0);
+  do 
+  {
+    led = random(3, 8);       //Generate a new random number within the range
+  } while (led == prevLed);   
+  prevLed = led;      
+  digitalWrite(led, 1);   //Switching on the random LED
+  
+  while(true)
+  { 
+      if (led == 3)
+  {
+    if (ser >= low1 && ser <= up1)
+    {
+      isShootable = true;
+    }
+    else
+    {
+      isShootable = false;
+    }
+  }  
+  
+    if (led == 4)
+  {
+    if (ser >= low2 && ser <= up2)
+    {
+      isShootable = true;
+    }
+    else
+    {
+      isShootable = false;
+    }
+  }  
+  
+    if (led == 5)
+  {
+    if (ser >= low3 && ser <= up3)
+    {
+      isShootable = true;
+    }
+    else
+    {
+      isShootable = false;
+    }
+  }  
+  
+    if (led == 6)
+  {
+    if (ser >= low4 && ser <= up4)
+    {
+      isShootable = true;
+    }
+    else
+    {
+      isShootable = false;
+    }
+  }  
+  
+    if (led == 7)
+  {
+    if (ser >= low5 && ser <= up5)
+    {
+      isShootable = true;
+    }
+    else
+    {
+      isShootable = false;
+    }
+  } 
+
+    currentTime = millis();                 //Keeps track of time
+    val = analogRead(potpin);
+    ser = map(val, 0, 1023, 0, 180);        //Servo Motor Control
+    serv.write(ser);
+    if(currentTime - startTime > duration)  //If duration limit has not exceeded
+    {
+      for(i=3; i<8; i++)                  //Resets all LEDs to 0
+        digitalWrite(i, 0);
+      Serial.println("Game Over!!!");      //Game Over Menu
+      Serial.println("Your score is: ");
+      Serial.println(score);
+      Serial.println("Do you want to continue?");
+      delay(1000);
+      while(true)
+      { 
+        digitalWrite(buzzer, HIGH);         //Buzzer starts buzzing
+        delay(2);
+        digitalWrite(buzzer, LOW);
+        delay(2);
+        if(digitalRead(s1) == 0)
+        {
+          Serial.println("Okay, New Game: ");    //Game Restart Menu
+          startTime = millis();
+          score = 0;
+          break;
+        }
+      }
+      break;
+    }
+    else if(digitalRead(s1) == 0 && oldSwitchValue == 1 && isShootable)   //If button is switched on
+    {   
+      score ++;
+      Serial.println(score);
+      break;
+    }
+    oldSwitchValue = digitalRead(s1);                //Prevents continuous shooting
+  } 
+  }
+}
+
